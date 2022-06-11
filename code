@@ -1,0 +1,1031 @@
+'''
+Online Game Seling/Distribution application
+'''
+
+
+from tkinter import *
+from tkinter import messagebox as ms
+from tkinter import ttk
+import sqlite3
+from tkinter import PhotoImage
+from PIL import ImageTk,Image
+import random
+from datetime import date
+import datetime as dt
+import pygame
+from pygame.locals import *
+import webbrowser
+import pygame, sys
+from pygame.locals import *
+import random, time
+
+
+root = Tk()
+root.title('Login Form')
+root.geometry('1450x750+30+30') 
+
+
+# make database and users (if not exists already) table at programme start up
+with sqlite3.connect('DBMS_Project.db') as db:
+    c = db.cursor()
+    
+c.execute('CREATE TABLE IF NOT EXISTS user(name TEXT PRIMARY KEY,email BLOB,user_id INTEGER,Phone_number INTEGER);')
+
+db.commit()
+db.close()
+
+my_conn = sqlite3.connect('DBMS_Project.db')
+###### end of connection ####
+r_set=my_conn.execute("SELECT count(*) as no from game")
+data_row=r_set.fetchone()
+no_rec=data_row[0] # Total number of rows in table
+limit = 8; # No of records to be shown per page.
+
+def back():
+    main_screen()
+
+def your_profile():
+    
+    global txtfld1,txtfld2,txtfld3,txtfld4,txtfld5
+    
+    img0 = Image.open("back_7.jpg")
+    img0 = ImageTk.PhotoImage(img0)
+    lbl_img0 = Label(image=img0)
+    lbl_img0.image = img0
+    lbl_img0.place(x=250,y=0)
+    
+    logo = Image.open("logo.jpg")
+    bk6= ImageTk.PhotoImage(logo)
+    lbl_logo = Label(image=bk6,bg="snow3",bd=3)
+    lbl_logo.image = bk6
+    lbl_logo.place(x=1300,y=25)
+
+    btn=Button(root,text="BACK",bg="MediumPurple1",fg="black",font=('Bahnschrift',16) ,bd=5,command=back)
+    btn.place(x=260,y=10,width=70,height=50)
+
+    
+    btn7=Button(root,text=" Submit ",bg="blue4",fg="white",font=("Bahnschrift SemiBold",20),bd=5,command=action)
+    btn7.place(x=750,y=600,width=150,height=50)
+    
+    btn7=Button(root,text="Enter username",bg="black",fg="white",font=("Bahnschrift SemiBold",16),bd=5)
+    btn7.place(x=600,y=100,width=170,height=35)
+    txtfld1 = Entry(root,bg="white",fg="black", font=("Helvetica",16) ,bd=5)
+    txtfld1.place(x=800,y=100,width=230,height=30)
+
+    btn7=Button(root,text="Enter Email",bg="black",fg="white",font=("Bahnschrift SemiBold",16),bd=5)
+    btn7.place(x=600,y=150,width=170,height=35)
+    txtfld2 = Entry(root,bg="white",fg="black", font=("Helvetica",16) ,bd=5)
+    txtfld2.place(x=800,y=150,width=230,height=30)
+    
+    btn7=Button(root,text="Enter User ID",bg="black",fg="white",font=("Bahnschrift SemiBold",16),bd=5)
+    btn7.place(x=600,y=200,width=170,height=35)
+    txtfld3 = Entry(root,bg="white",fg="black", font=("Helvetica",16) ,bd=5)
+    txtfld3.place(x=800,y=200,width=230,height=30)
+    
+    btn7=Button(root,text="Enter DOB",bg="black",fg="white",font=("Bahnschrift SemiBold",16),bd=5)
+    btn7.place(x=600,y=250,width=170,height=35)
+    txtfld4 = Entry(root,bg="white",fg="black", font=("Helvetica",16) ,bd=5)
+    txtfld4.place(x=800,y=250,width=230,height=30)
+    
+    btn7=Button(root,text="Phone Number",bg="black",fg="white",font=("Bahnschrift SemiBold",16),bd=5)
+    btn7.place(x=600,y=300,width=170,height=35)
+    txtfld5 = Entry(root,bg="white",fg="black", font=("Helvetica",16) ,bd=5)
+    txtfld5.place(x=800,y=300,width=230,height=30)
+
+def action():
+    username = txtfld1.get()
+    email = txtfld2.get()
+    date = txtfld4.get()
+    user_id = txtfld3.get()
+    Phone_num = txtfld5.get()
+    
+    with sqlite3.connect('DBMS_Project.db') as db:
+        c = db.cursor()
+        
+    insert = 'INSERT INTO user(User_name,email_id,DOB,User_id,Phone_number) VALUES(?,?,?,?,?)'
+    c.execute(insert,[(username),(email),(date),(user_id),(Phone_num)])
+    db.commit()
+    db.close()
+    
+def Search_game():    
+    def Database():
+        conn = sqlite3.connect("DBMS_Project.db")
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM Game")
+        conn.commit()
+
+        cursor.execute("SELECT * FROM `Game` ")
+        fetch = cursor.fetchall()
+        for data in fetch:
+            tree.insert('', 'end', values=(data))
+        cursor.close()
+        conn.close()
+    
+    def Search():
+        if SEARCH.get() != "":
+            tree.delete(*tree.get_children())
+            conn = sqlite3.connect("DBMS_Project.db")
+            cursor = conn.cursor()
+            cursor.execute("SELECT * FROM `Game` WHERE `app_name` LIKE ? OR `game_id` LIKE ?", ('%'+str(SEARCH.get())+'%', '%'+str(SEARCH.get())+'%'))
+            fetch = cursor.fetchall()
+            for data in fetch:
+                tree.insert('', 'end', values=(data))
+            cursor.close()
+            conn.close()
+            
+    def Reset():
+        conn = sqlite3.connect("DBMS_Project.db")
+        cursor = conn.cursor()
+        tree.delete(*tree.get_children())
+        cursor.execute("SELECT * FROM `Game` ORDER BY `app_name` ASC")
+        fetch = cursor.fetchall()
+        for data in fetch:
+            tree.insert('', 'end', values=(data))
+        cursor.close()
+        conn.close()
+        
+    def addtocart():
+        global data_a,data_b
+        ms.showinfo("Cart","Added to Cart!")
+        if SEARCH.get() != "":
+            tree.delete(*tree.get_children())
+            with sqlite3.connect('DBMS_Project.db') as db:
+                c = db.cursor()
+            c.execute("SELECT * FROM `Game` WHERE `app_name` LIKE ? OR `game_id` LIKE ?", ('%'+str(SEARCH.get())+'%', '%'+str(SEARCH.get())+'%'))
+            fetch = c.fetchall()
+            for data in fetch:
+                print("Game ID: ", data[0])
+                print("Name: ", data[1])
+                print("Rating: ", data[2])
+                print("Downloads: ", data[3])
+                print("Price: ", data[4])
+                print("Size_GB: ", data[5])
+                print("\n")
+
+            insert = 'INSERT INTO cart(game_id,app_name,Rating,Downloads,Price,Size_GB) VALUES(?,?,?,?,?,?)'
+            c.execute(insert,[(data[0]),(data[1]),(data[2]),(data[3]),(data[4]),(data[5])])
+            db.commit()
+            db.close()
+            
+    def back_button():
+        main_screen()
+        
+
+    #=====================================VARIABLES============================================
+    SEARCH = StringVar()
+
+    #=====================================FRAME================================================
+    Top = Frame(root, width=500, bd=1, relief=SOLID)
+    Top.pack(side=TOP)
+    MidFrame = Frame(root, width=500)
+    MidFrame.pack(side=TOP)
+    LeftForm= Frame(MidFrame, width=100)
+    LeftForm.pack(side=LEFT)
+    RightForm= Frame(MidFrame, width=500)
+    RightForm.pack(side=RIGHT)
+
+    #=====================================LABEL WIDGET=========================================
+    lbl_title = Label(Top, width=500, font=('arial', 18), text="Python - Search Query In SQLite")
+    lbl_title.pack(side=TOP, fill=X)
+    lbl_search = Label(LeftForm, font=('arial', 15), text="Search here...")
+    lbl_search.pack(side=TOP)
+
+    #=====================================ENTRY WIDGET=========================================
+    search = Entry(LeftForm, textvariable=SEARCH)
+    search.pack(side=TOP, pady=10)
+
+    #=====================================BUTTON WIDGET========================================
+    btn_search = Button(LeftForm, text="Search", bg="#006dcc", command=Search)
+    btn_search.pack(side=LEFT)
+    btn_reset = Button(LeftForm, text="Reset", command=Reset)
+    btn_reset.pack(side=LEFT)
+    btn_cart = Button(LeftForm, text="Add to Cart",bg="goldenrod3",command=addtocart)
+    btn_cart.pack(side=LEFT)
+    btn_back = Button(LeftForm, text="Back",bg="goldenrod3",command=back_button)
+    btn_back.pack(side=LEFT)
+    #=====================================Table WIDGET=========================================
+    scrollbarx = Scrollbar(RightForm, orient=HORIZONTAL)
+    scrollbary = Scrollbar(RightForm, orient=VERTICAL)
+    tree = ttk.Treeview(RightForm, columns=("Game_ID", "App_Name", "Rating", "Downloads","Price","Size_GB"), selectmode="extended", height=400, yscrollcommand=scrollbary.set, xscrollcommand=scrollbarx.set)
+    scrollbary.config(command=tree.yview)
+    scrollbary.pack(side=RIGHT, fill=Y)
+    scrollbarx.config(command=tree.xview)
+    scrollbarx.pack(side=BOTTOM, fill=X)
+    tree.heading('Game_ID', text="Game_ID",anchor=W)
+    tree.heading('App_Name', text="App_Name",anchor=W)
+    tree.heading('Rating', text="Rating",anchor=W)
+    tree.heading('Downloads', text="Downloads",anchor=W)
+    tree.heading('Price', text="Price",anchor=W)
+    tree.heading('Size_GB', text="Size_GB",anchor=W)
+    tree.column('#0', stretch=NO, minwidth=0, width=0)
+    tree.column('#1', stretch=NO, minwidth=0, width=0)
+    tree.column('#2', stretch=NO, minwidth=0, width=80)
+    tree.column('#3', stretch=NO, minwidth=0, width=120)
+    tree.column('#4', stretch=NO, minwidth=0, width=170)
+    tree.column('#5', stretch=NO, minwidth=0, width=80)
+    tree.pack()
+    
+    Database()
+
+def insert():    
+    
+    print(name)
+    
+    with sqlite3.connect('your_profile.db') as db:
+        c = db.cursor()
+       
+    insert = 'INSERT INTO user(name) VALUES(?)'
+    c.execute(insert,[(name)])
+    db.commit()
+    
+def home():
+    main_screen()
+    
+def cart():
+    global textarea,name,size,price,sum1,num,total_price
+    
+    img1 = Image.open("macbook-bg.png")
+    img = ImageTk.PhotoImage(img1)
+    lbl_img = Label(image=img)
+    lbl_img.image = img
+    lbl_img.place(x=0,y=0,width=1450,height=750)
+
+    frm2=Frame(root,bg="black",bd=7)
+    frm2.place(x=270,y=10,width=910,height=550)
+
+    scrol_y=Scrollbar(frm2,orient=VERTICAL)
+    textarea=Text(frm2,yscrollcommand=scrol_y)
+    scrol_y.pack(side=RIGHT,fill=Y)
+    scrol_y.config(command=textarea.yview)
+    textarea.pack()
+    welcome()
+    
+    num=1
+    total_price=0
+
+    with sqlite3.connect('DBMS_Project.db') as db:
+        c = db.cursor()
+    c.execute("SELECT app_name,Size_GB,Price FROM `Cart`")
+    fetch = c.fetchall()
+    for data in fetch:
+        print("Name: ", data[0])
+        print("Size (GB): ", data[1])
+        print("Price ", data[2])
+        name =data[0]
+        size=data[1]
+        price=data[2]
+        total_price=total_price+price
+        textarea.insert(END, f"{num}.  \t\t{name}\t\t\t\t           {size}\t\t        {price}\n\n")
+        num = num +1
+        
+    with sqlite3.connect('DBMS_Project.db') as db:
+        c = db.cursor()
+    c.execute("SELECT SUM(price) FROM `Cart`")
+    fetch = c.fetchall()
+    print(fetch)
+    
+    textarea.insert(END, f"\n========================================================================")
+    textarea.insert(END, f"\n              \tTotal Paybill Amount :\t\t\t\t\t\t\t{fetch}")
+    textarea.insert(END, f"\n\n========================================================================")
+    
+    btn=Button(root,text="BACK",bg="MediumPurple1",fg="black",font=('Bahnschrift',16) ,bd=5,command=back)
+    btn.place(x=50,y=10,width=70,height=50)
+
+    
+    
+def welcome():
+    global textarea
+    textarea.delete(1.0,END)
+    textarea.insert(END,"\n\t\t\t  O N L I N E      A P P     S T O R E\n\n")
+    textarea.insert(END,"\t\t\t\t  BILL  RECIPT\n")
+    textarea.insert(END,f"\n\n========================================================================")
+    textarea.insert(END,"\n Sr No.\t\tApp Name \t\t\t\t         Size\t\t        Price")
+    textarea.insert(END,f"\n========================================================================\n")
+    textarea.configure(font='arial 15 bold')    
+    
+
+    
+    
+def Library():
+    global new
+    nx = Tk()
+    nx.geometry("850x600")
+    
+    nx.title("RECORD DISPLAY")
+    
+    label = Label(nx, text=" My Library :",font = "time 20 bold",bg = "black", fg ="white" , padx = 350, pady = 20)
+    label.grid(row = 0, column = 0, columnspan = 20)
+
+    p1 = Label(nx, text = "Game ID", font = "time 15 bold")
+    p1.grid(row = 1, column = 1, padx = 10, pady = 10)
+
+    p2 = Label(nx, text = "Name", font = "time 15 bold")
+    p2.grid(row = 1, column = 2, padx = 10, pady = 10)
+
+    p3 = Label(nx, text = "Date Of Purchase", font = "time 15 bold")
+    p3.grid(row = 1, column = 3, padx = 10, pady = 10)
+
+    conn = sqlite3.connect("DBMS_Project.db")
+    c = conn.cursor()
+    c.execute("SELECT * FROM cart ORDER BY Game_id ASC")
+    r = c.fetchall()
+
+    num=2
+    for i in r:
+        Game_id= Label(nx, text = i[0], font ="time 12 bold", fg = "blue")
+        Game_id.grid(row =num, column = 1, padx =10, pady =10)
+
+        app_name= Label(nx, text = i[1], font ="time 12 bold", fg = "blue")
+        app_name.grid(row =num, column =2, padx =10, pady =10)
+
+        rating= Label(nx, text = i[2], font ="time 12 bold", fg = "blue")
+        rating.grid(row =num, column = 3, padx =10, pady =10)
+        num = num + 1
+
+    conn.commit()
+    conn.close()
+    
+    def download_1():
+        def Database():
+            conn = sqlite3.connect("DBMS_Project.db")
+            cursor = conn.cursor()
+            cursor.execute("SELECT * FROM `Cart`")
+            conn.commit()
+
+            cursor.execute("SELECT * FROM `Cart` ")
+            fetch = cursor.fetchall()
+            for data in fetch:
+                tree.insert('', 'end', values=(data))
+            cursor.close()
+            conn.close()
+    
+        def Search():
+            if SEARCH.get() != "":
+                tree.delete(*tree.get_children())
+                conn = sqlite3.connect("DBMS_Project.db")
+                cursor = conn.cursor()
+                cursor.execute("SELECT * FROM `Cart` WHERE `app_name` LIKE ? OR `game_id` LIKE ?", ('%'+str(SEARCH.get())+'%', '%'+str(SEARCH.get())+'%'))
+                fetch = cursor.fetchall()
+                for data in fetch:
+                    tree.insert('', 'end', values=(data))
+                cursor.close()
+                conn.close()
+
+        def Reset():
+            conn = sqlite3.connect("DBMS_Project.db")
+            cursor = conn.cursor()
+            tree.delete(*tree.get_children())
+            cursor.execute("SELECT * FROM `Cart` ORDER BY `app_name` ASC")
+            fetch = cursor.fetchall()
+            for data in fetch:
+                tree.insert('', 'end', values=(data))
+            cursor.close()
+            conn.close()
+
+        def open_link():
+            global data_a,data_b,new
+            if SEARCH.get() != "":
+                tree.delete(*tree.get_children())
+                with sqlite3.connect('DBMS_Project.db') as db:
+                    c = db.cursor()
+                c.execute("SELECT * FROM `Game` WHERE `app_name` LIKE ? OR `game_id` LIKE ?", ('%'+str(SEARCH.get())+'%', '%'+str(SEARCH.get())+'%'))
+                fetch = c.fetchall()
+                for data in fetch:
+                    print("Game ID: ", data[0])
+                    print("Name: ", data[1])
+                    print("Rating: ", data[2])
+                    print("Downloads: ", data[3])
+                    print("Price: ", data[4])
+                    print("Size_GB: ", data[5])
+                    print("Link: ", data[6])
+                    print("\n")
+
+    
+            new=1
+            url = data[6]
+            print(url)
+            webbrowser.open(url,new=new)
+
+            db.commit()
+            db.close()
+
+        #=====================================VARIABLES============================================
+        SEARCH = StringVar()
+
+        #=====================================FRAME================================================
+        Top = Frame(root, width=500, bd=1, relief=SOLID)
+        Top.pack(side=TOP)
+        MidFrame = Frame(root, width=500)
+        MidFrame.pack(side=TOP)
+        LeftForm= Frame(MidFrame, width=100)
+        LeftForm.pack(side=LEFT)
+        RightForm= Frame(MidFrame, width=500)
+        RightForm.pack(side=RIGHT)
+
+
+        #=====================================LABEL WIDGET=========================================
+        lbl_title = Label(Top, width=500, font=('arial', 18), text="Python - Search Query In SQLite")
+        lbl_title.pack(side=TOP, fill=X)
+        lbl_search = Label(LeftForm, font=('arial', 15), text="Search here...")
+        lbl_search.pack(side=TOP)
+
+        #=====================================ENTRY WIDGET=========================================
+        search = Entry(LeftForm, textvariable=SEARCH)
+        search.pack(side=TOP, pady=10)
+
+        #=====================================BUTTON WIDGET========================================
+        btn_search = Button(LeftForm, text="Search", bg="#006dcc", command=Search)
+        btn_search.pack(side=LEFT)
+        btn_reset = Button(LeftForm, text="Reset", command=Reset)
+        btn_reset.pack(side=LEFT)
+        btn_back = Button(LeftForm, text="DOWNLOAD",bg="goldenrod3",command=open_link)
+        btn_back.pack(side=LEFT)
+        #=====================================Table WIDGET=========================================
+        scrollbarx = Scrollbar(RightForm, orient=HORIZONTAL)
+        scrollbary = Scrollbar(RightForm, orient=VERTICAL)
+        tree = ttk.Treeview(RightForm, columns=("Game_ID", "App_Name", "Rating", "Downloads","Price","Size_GB"), selectmode="extended", height=400, yscrollcommand=scrollbary.set, xscrollcommand=scrollbarx.set)
+        scrollbary.config(command=tree.yview)
+        scrollbary.pack(side=RIGHT, fill=Y)
+        scrollbarx.config(command=tree.xview)
+        scrollbarx.pack(side=BOTTOM, fill=X)
+        tree.heading('Game_ID', text="Game_ID",anchor=W)
+        tree.heading('App_Name', text="App_Name",anchor=W)
+        tree.heading('Rating', text="Rating",anchor=W)
+        tree.heading('Downloads', text="Downloads",anchor=W)
+        tree.heading('Price', text="Price",anchor=W)
+        tree.heading('Size_GB', text="Size_GB",anchor=W)
+        tree.column('#0', stretch=NO, minwidth=0, width=0)
+        tree.column('#1', stretch=NO, minwidth=0, width=0)
+        tree.column('#2', stretch=NO, minwidth=0, width=80)
+        tree.column('#3', stretch=NO, minwidth=0, width=120)
+        tree.column('#4', stretch=NO, minwidth=0, width=170)
+        tree.column('#5', stretch=NO, minwidth=0, width=80)
+        tree.pack()
+
+        Database()
+        
+        
+    btn7=Button(nx,text="Download",bg="black",fg="white",font=("Bahnschrift SemiBold",13),bd=5,command=download_1)
+    btn7.place(x=650,y=100,width=150,height=35)
+    
+        
+
+
+def browse_games():
+    nx = Tk()
+    nx.geometry("1300x800")
+
+    nx.title("RECORD DISPLAY")
+    
+    def sort_gameid():
+        label = Label(nx, text=" Browse Games :",font = "time 20 bold",bg = "black", fg ="white" , padx = 550, pady = 20)
+        label.grid(row = 0, column = 0, columnspan = 20)
+
+        p1 = Label(nx, text = "Game ID", font = "time 15 bold")
+        p1.grid(row = 1, column = 1, padx = 10, pady = 10)
+
+        p2 = Label(nx, text = "App Name", font = "time 15 bold")
+        p2.grid(row = 1, column = 2, padx = 15, pady = 10)
+
+        p3 = Label(nx, text = "Rating", font = "time 15 bold")
+        p3.grid(row = 1, column = 3, padx = 10, pady = 10)
+
+        p4 = Label(nx, text = "Downloads", font = "time 15 bold")
+        p4.grid(row = 1, column = 4, padx = 10, pady = 10)
+
+        p5 = Label(nx, text = "Price", font = "time 15 bold")
+        p5.grid(row = 1, column = 5, padx = 10, pady = 10)
+
+        p6 = Label(nx, text = "Size_GB", font = "time 15 bold")
+        p6.grid(row = 1, column = 6, padx = 10, pady = 10)
+
+        conn = sqlite3.connect("DBMS_Project.db")
+        c = conn.cursor()
+        c.execute("SELECT * FROM Game ORDER BY Game_id ASC")
+        r = c.fetchall()
+
+        num=2
+        for i in r:
+            Game_id= Label(nx, text = i[0], font ="time 12 bold", fg = "blue")
+            Game_id.grid(row =num, column = 1, padx =10, pady =10)
+
+            app_name= Label(nx, text = i[1], font ="time 12 bold", fg = "blue")
+            app_name.grid(row =num, column =2, padx =10, pady =10)
+
+            price= Label(nx, text = i[2], font ="time 12 bold", fg = "blue")
+            price.grid(row =num, column = 3, padx =10, pady =10)
+
+            discount_price= Label(nx, text = i[3], font ="time 12 bold", fg = "blue")
+            discount_price.grid(row =num, column = 4, padx =10, pady =10)
+
+            rating= Label(nx, text = i[4], font ="time 12 bold", fg = "blue")
+            rating.grid(row =num, column = 5, padx =10, pady =10)
+
+            release_date= Label(nx, text = i[5], font ="time 12 bold", fg = "blue")
+            release_date.grid(row =num, column = 6, padx =10, pady =10)
+
+            num = num + 1
+
+        conn.commit()
+        conn.close()
+        
+        
+    def sort_title():
+        label = Label(nx, text=" Browse Games :",font = "time 20 bold",bg = "black", fg ="white" , padx = 550, pady = 20)
+        label.grid(row = 0, column = 0, columnspan = 20)
+
+        p1 = Label(nx, text = "Game ID", font = "time 15 bold")
+        p1.grid(row = 1, column = 1, padx = 10, pady = 10)
+
+        p2 = Label(nx, text = "App Name", font = "time 15 bold")
+        p2.grid(row = 1, column = 2, padx = 15, pady = 10)
+
+        p3 = Label(nx, text = "Rating", font = "time 15 bold")
+        p3.grid(row = 1, column = 3, padx = 10, pady = 10)
+
+        p4 = Label(nx, text = "Downloads", font = "time 15 bold")
+        p4.grid(row = 1, column = 4, padx = 10, pady = 10)
+
+        p5 = Label(nx, text = "Price", font = "time 15 bold")
+        p5.grid(row = 1, column = 5, padx = 10, pady = 10)
+
+        p6 = Label(nx, text = "Size_GB", font = "time 15 bold")
+        p6.grid(row = 1, column = 6, padx = 10, pady = 10)
+
+        conn = sqlite3.connect("DBMS_Project.db")
+        c = conn.cursor()
+        c.execute("SELECT * FROM Game ORDER BY app_name DESC")
+        r = c.fetchall()
+
+        num=2
+        for i in r:
+            Game_id= Label(nx, text = i[0], font ="time 12 bold", fg = "blue")
+            Game_id.grid(row =num, column = 1, padx =10, pady =10)
+
+            app_name= Label(nx, text = i[1], font ="time 12 bold", fg = "blue")
+            app_name.grid(row =num, column =2, padx =10, pady =10)
+
+            price= Label(nx, text = i[2], font ="time 12 bold", fg = "blue")
+            price.grid(row =num, column = 3, padx =10, pady =10)
+
+            discount_price= Label(nx, text = i[3], font ="time 12 bold", fg = "blue")
+            discount_price.grid(row =num, column = 4, padx =10, pady =10)
+
+            rating= Label(nx, text = i[4], font ="time 12 bold", fg = "blue")
+            rating.grid(row =num, column = 5, padx =10, pady =10)
+
+            release_date= Label(nx, text = i[5], font ="time 12 bold", fg = "blue")
+            release_date.grid(row =num, column = 6, padx =10, pady =10)
+
+            num = num + 1
+
+        conn.commit()
+        conn.close()
+        
+    def sort_rating():
+        label = Label(nx, text=" Browse Games :",font = "time 20 bold",bg = "black", fg ="white" , padx = 550, pady = 20)
+        label.grid(row = 0, column = 0, columnspan = 20)
+
+        p1 = Label(nx, text = "Game ID", font = "time 15 bold")
+        p1.grid(row = 1, column = 1, padx = 10, pady = 10)
+
+        p2 = Label(nx, text = "App Name", font = "time 15 bold")
+        p2.grid(row = 1, column = 2, padx = 15, pady = 10)
+
+        p3 = Label(nx, text = "Rating", font = "time 15 bold")
+        p3.grid(row = 1, column = 3, padx = 10, pady = 10)
+
+        p4 = Label(nx, text = "Downloads", font = "time 15 bold")
+        p4.grid(row = 1, column = 4, padx = 10, pady = 10)
+
+        p5 = Label(nx, text = "Price", font = "time 15 bold")
+        p5.grid(row = 1, column = 5, padx = 10, pady = 10)
+
+        p6 = Label(nx, text = "Size_GB", font = "time 15 bold")
+        p6.grid(row = 1, column = 6, padx = 10, pady = 10)
+
+        conn = sqlite3.connect("DBMS_Project.db")
+        c = conn.cursor()
+        c.execute("SELECT * FROM Game ORDER BY ratings DESC")
+        r = c.fetchall()
+
+        num=2
+        for i in r:
+            Game_id= Label(nx, text = i[0], font ="time 12 bold", fg = "blue")
+            Game_id.grid(row =num, column = 1, padx =10, pady =10)
+
+            app_name= Label(nx, text = i[1], font ="time 12 bold", fg = "blue")
+            app_name.grid(row =num, column =2, padx =10, pady =10)
+
+            price= Label(nx, text = i[2], font ="time 12 bold", fg = "blue")
+            price.grid(row =num, column = 3, padx =10, pady =10)
+
+            discount_price= Label(nx, text = i[3], font ="time 12 bold", fg = "blue")
+            discount_price.grid(row =num, column = 4, padx =10, pady =10)
+
+            rating= Label(nx, text = i[4], font ="time 12 bold", fg = "blue")
+            rating.grid(row =num, column = 5, padx =10, pady =10)
+
+            release_date= Label(nx, text = i[5], font ="time 12 bold", fg = "blue")
+            release_date.grid(row =num, column = 6, padx =10, pady =10)
+
+            num = num + 1
+
+        conn.commit()
+        conn.close()
+        
+    def sort_price():
+        label = Label(nx, text=" Browse Games :",font = "time 20 bold",bg = "black", fg ="white" , padx = 550, pady = 20)
+        label.grid(row = 0, column = 0, columnspan = 20)
+
+        p1 = Label(nx, text = "Game ID", font = "time 15 bold")
+        p1.grid(row = 1, column = 1, padx = 10, pady = 10)
+
+        p2 = Label(nx, text = "App Name", font = "time 15 bold")
+        p2.grid(row = 1, column = 2, padx = 15, pady = 10)
+
+        p3 = Label(nx, text = "Rating", font = "time 15 bold")
+        p3.grid(row = 1, column = 3, padx = 10, pady = 10)
+
+        p4 = Label(nx, text = "Downloads", font = "time 15 bold")
+        p4.grid(row = 1, column = 4, padx = 10, pady = 10)
+
+        p5 = Label(nx, text = "Price", font = "time 15 bold")
+        p5.grid(row = 1, column = 5, padx = 10, pady = 10)
+
+        p6 = Label(nx, text = "Size_GB", font = "time 15 bold")
+        p6.grid(row = 1, column = 6, padx = 10, pady = 10)
+
+        conn = sqlite3.connect("DBMS_Project.db")
+        c = conn.cursor()
+        c.execute("SELECT * FROM Game ORDER BY price DESC")
+        r = c.fetchall()
+
+        num=2
+        for i in r:
+            Game_id= Label(nx, text = i[0], font ="time 12 bold", fg = "blue")
+            Game_id.grid(row =num, column = 1, padx =10, pady =10)
+
+            app_name= Label(nx, text = i[1], font ="time 12 bold", fg = "blue")
+            app_name.grid(row =num, column =2, padx =10, pady =10)
+
+            price= Label(nx, text = i[2], font ="time 12 bold", fg = "blue")
+            price.grid(row =num, column = 3, padx =10, pady =10)
+
+            discount_price= Label(nx, text = i[3], font ="time 12 bold", fg = "blue")
+            discount_price.grid(row =num, column = 4, padx =10, pady =10)
+
+            rating= Label(nx, text = i[4], font ="time 12 bold", fg = "blue")
+            rating.grid(row =num, column = 5, padx =10, pady =10)
+
+            release_date= Label(nx, text = i[5], font ="time 12 bold", fg = "blue")
+            release_date.grid(row =num, column = 6, padx =10, pady =10)
+
+            num = num + 1
+
+        conn.commit()
+        conn.close()
+    
+    
+        
+    btn1=Button(nx,text="Sort By Game ID",bg="maroon", fg="white",font=("Helvetica",16) ,bd=5,command=sort_gameid)
+    btn1.place(x=1050,y=100,width=180,height=30)
+    
+    btn2=Button(nx,text="Sort By Title",bg="maroon", fg="white",font=("Helvetica",16) ,bd=5,command=sort_title)
+    btn2.place(x=1050,y=200,width=180,height=30)
+    
+    btn3=Button(nx,text="Sort By Rating",bg="maroon", fg="white",font=("Helvetica",16) ,bd=5,command=sort_rating)
+    btn3.place(x=1050,y=300,width=180,height=30)
+    
+    btn4=Button(nx,text="Sort By Price",bg="maroon", fg="white",font=("Helvetica",16) ,bd=5,command=sort_price)
+    btn4.place(x=1050,y=400,width=180,height=30)
+        
+    
+    label = Label(nx, text=" Browse Games :",font = "time 20 bold",bg = "black", fg ="white" , padx = 550, pady = 20)
+    label.grid(row = 0, column = 0, columnspan = 20)
+    
+    p1 = Label(nx, text = "Game ID", font = "time 15 bold")
+    p1.grid(row = 1, column = 1, padx = 10, pady = 10)
+
+    p2 = Label(nx, text = "App Name", font = "time 15 bold")
+    p2.grid(row = 1, column = 2, padx = 15, pady = 10)
+
+    p3 = Label(nx, text = "Rating", font = "time 15 bold")
+    p3.grid(row = 1, column = 3, padx = 10, pady = 10)
+
+    p4 = Label(nx, text = "Downloads", font = "time 15 bold")
+    p4.grid(row = 1, column = 4, padx = 10, pady = 10)
+
+    p5 = Label(nx, text = "Price", font = "time 15 bold")
+    p5.grid(row = 1, column = 5, padx = 10, pady = 10)
+
+    p6 = Label(nx, text = "Size_GB", font = "time 15 bold")
+    p6.grid(row = 1, column = 6, padx = 10, pady = 10)
+    
+    conn = sqlite3.connect("DBMS_Project.db")
+    c = conn.cursor()
+    c.execute("SELECT * FROM Game")
+    r = c.fetchall()
+    
+    num=2
+    for i in r:
+        Game_id= Label(nx, text = i[0], font ="time 12 bold", fg = "blue")
+        Game_id.grid(row =num, column = 1, padx =10, pady =10)
+        
+        app_name= Label(nx, text = i[1], font ="time 12 bold", fg = "blue")
+        app_name.grid(row =num, column =2, padx =10, pady =10)
+        
+        price= Label(nx, text = i[2], font ="time 12 bold", fg = "blue")
+        price.grid(row =num, column = 3, padx =10, pady =10)
+        
+        discount_price= Label(nx, text = i[3], font ="time 12 bold", fg = "blue")
+        discount_price.grid(row =num, column = 4, padx =10, pady =10)
+        
+        rating= Label(nx, text = i[4], font ="time 12 bold", fg = "blue")
+        rating.grid(row =num, column = 5, padx =10, pady =10)
+        
+        release_date= Label(nx, text = i[5], font ="time 12 bold", fg = "blue")
+        release_date.grid(row =num, column = 6, padx =10, pady =10)
+        
+        num = num + 1
+    
+    conn.commit()
+    conn.close()
+    
+def game():
+    global SCORE
+    pygame.init()
+
+    #Setting up FPS 
+    FPS = 60
+    FramePerSec = pygame.time.Clock()
+
+    #Creating colors
+    BLUE  = (0, 0, 255)
+    RED   = (255, 0, 0)
+    GREEN = (0, 255, 0)
+    BLACK = (0, 0, 0)
+    WHITE = (255, 255, 255)
+
+    #Other Variables for use in the program
+    SCREEN_WIDTH = 400
+    SCREEN_HEIGHT = 600
+    SPEED = 5
+    SCORE = 0
+
+    #Setting up Fonts
+    font = pygame.font.SysFont("Verdana", 60)
+    font_small = pygame.font.SysFont("Verdana", 20)
+    game_over = font.render("Game Over", True, BLACK)
+
+    background = pygame.image.load("AnimatedStreet.png")
+
+    #Create a white screen 
+    DISPLAYSURF = pygame.display.set_mode((400,600))
+    DISPLAYSURF.fill(WHITE)
+    pygame.display.set_caption("Game")
+
+
+    class Enemy(pygame.sprite.Sprite):
+          def __init__(self):
+            super().__init__() 
+            self.image = pygame.image.load("Enemy.png")
+            self.rect = self.image.get_rect()
+            self.rect.center = (random.randint(40,SCREEN_WIDTH-40), 0)
+
+          def move(self):
+            global SCORE
+            self.rect.move_ip(0,SPEED)
+            if (self.rect.bottom > 600):
+                SCORE += 1
+                self.rect.top = 0
+                self.rect.center = (random.randint(40, SCREEN_WIDTH - 40), 0)
+
+
+    class Player(pygame.sprite.Sprite):
+        def __init__(self):
+            super().__init__() 
+            self.image = pygame.image.load("Player.png")
+            self.rect = self.image.get_rect()
+            self.rect.center = (160, 520)
+
+        def move(self):
+            pressed_keys = pygame.key.get_pressed()
+
+            if self.rect.left > 0:
+                  if pressed_keys[K_LEFT]:
+                      self.rect.move_ip(-5, 0)
+            if self.rect.right < SCREEN_WIDTH:        
+                  if pressed_keys[K_RIGHT]:
+                      self.rect.move_ip(5, 0)
+
+
+    #Setting up Sprites        
+    P1 = Player()
+    E1 = Enemy()
+
+    #Creating Sprites Groups
+    enemies = pygame.sprite.Group()
+    enemies.add(E1)
+    all_sprites = pygame.sprite.Group()
+    all_sprites.add(P1)
+    all_sprites.add(E1)
+
+    #Adding a new User event 
+    INC_SPEED = pygame.USEREVENT + 1
+    pygame.time.set_timer(INC_SPEED, 1000)
+
+    #Game Loop
+    while True:
+
+        #Cycles through all events occuring  
+        for event in pygame.event.get():
+            if event.type == INC_SPEED:
+                  SPEED += 0.5      
+            if event.type == QUIT:
+                pygame.quit()
+                sys.exit()
+
+
+        DISPLAYSURF.blit(background, (0,0))
+        scores = font_small.render(str(SCORE), True, BLACK)
+        DISPLAYSURF.blit(scores, (10,10))
+
+        #Moves and Re-draws all Sprites
+        for entity in all_sprites:
+            entity.move()
+            DISPLAYSURF.blit(entity.image, entity.rect)
+
+
+        #To be run if collision occurs between Player and Enemy
+        if pygame.sprite.spritecollideany(P1, enemies):
+              pygame.mixer.Sound('crash.wav').play()
+              time.sleep(1)
+
+              DISPLAYSURF.fill(RED)
+              DISPLAYSURF.blit(game_over, (30,250))
+
+              pygame.display.update()
+              for entity in all_sprites:
+                    entity.kill() 
+              time.sleep(2)
+              pygame.quit()
+              sys.exit()        
+
+        pygame.display.update()
+        FramePerSec.tick(FPS)
+
+    
+    
+def log_out():
+    ms.showinfo("Log Out","Logged out successfully !")
+    root.destroy()
+
+def main_screen():
+
+    username = txtfld1.get()
+    password = txtfld2.get()
+
+    with sqlite3.connect('DBMS_Project.db') as db:
+        c = db.cursor()
+
+    insert = 'INSERT INTO user(User_name,Password) VALUES(?,?)'
+    c.execute(insert,[(username),(password)])
+    db.commit()
+
+    image2 = Image.open("r_report.png")
+    image2 = ImageTk.PhotoImage(image2)
+    lbl_img2 = Label(image=image2)
+    lbl_img2.image = image2
+    lbl_img2.place(x=0,y=0)
+
+
+    img0 = Image.open("back_5.jpg")
+    img0 = ImageTk.PhotoImage(img0)
+    lbl_img0 = Label(image=img0)
+    lbl_img0.image = img0
+    lbl_img0.place(x=250,y=0)
+
+    logo = Image.open("logo.jpg")
+    bk6= ImageTk.PhotoImage(logo)
+    lbl_logo = Label(image=bk6,bg="snow3",bd=3)
+    lbl_logo.image = bk6
+    lbl_logo.place(x=1300,y=25)
+    
+    btn7=Button(root,text=" Welcome to 4Fox ",bg="black",fg="orange",font=("Bahnschrift SemiBold",20),bd=5)
+    btn7.place(x=600,y=25,width=300,height=50)
+
+
+    btn=Button(root,text="HOME",bg="blue4",fg="white",font=("Bahnschrift SemiBold",20) ,bd=5,command=main_screen)
+    btn.place(x=300,y=30,width=100,height=38)
+
+    btn=Button(root,text="Play Game",bg="blue4",fg="white",font=("Bahnschrift SemiBold",13) ,bd=5,command=game)
+    btn.place(x=1150,y=25,width=120,height=38)
+
+    #title
+    '''    
+    frm1=Frame(root,bg="black",bd=7)
+    frm1.place(x=643,y=10,width=340,height=70)
+    lbl1=Label(root,text="HEAL HANDS", fg="black", font=("Bahnschrift SemiBold",23) ,bg="coral")
+    lbl1.place(x=660,y=20,width=300,height=50)'''
+
+
+    #Your_profile
+    img2 = Image.open("profile3.jpg")
+    bk1= ImageTk.PhotoImage(img2)
+    lbl_img1 = Label(image=bk1,bg="snow3",bd=3)
+    lbl_img1.image = bk1
+    lbl_img1.place(x=370,y=100)
+    btn1=Button(root,text="Your Profile",bg="goldenrod3",fg="black",font=("Bahnschrift",15) ,bd=5,command=your_profile)
+    btn1.place(x=370,y=270,width=150,height=50)
+
+    #book2
+    img3 = Image.open("browse_games2.jpg")
+    bk2= ImageTk.PhotoImage(img3)
+    lbl_img2 = Label(image=bk2,bg="snow3",bd=3)
+    lbl_img2.image = bk2
+    lbl_img2.place(x=700,y=100)
+    btn2=Button(root,text="Browse Games",bg="goldenrod3",fg="black",font=("Bahnschrift",15) ,bd=5,command=browse_games)
+    btn2.place(x=700,y=270,width=170,height=50)
+
+    #book3
+    img4 = Image.open("search3.jpeg")
+    bk3= ImageTk.PhotoImage(img4)
+    lbl_img3 = Label(image=bk3,bg="snow3",bd=3)
+    lbl_img3.image = bk3
+    lbl_img3.place(x=1050,y=100)
+    btn3=Button(root,text="Search Games",bg="goldenrod3",fg="black",font=("Bahnschrift",15) ,bd=5,command=Search_game)
+    btn3.place(x=1050,y=270,width=170,height=50)
+
+    #book4
+    img5 = Image.open("downloads2.jpg")
+    bk4= ImageTk.PhotoImage(img5)
+    lbl_img4 = Label(image=bk4,bg="snow3",bd=3)
+    lbl_img4.image = bk4
+    lbl_img4.place(x=700,y=420)
+    btn4=Button(root,text="Go to Cart",bg="goldenrod3",fg="black",font=("Bahnschrift",17) ,bd=5,command=cart)
+    btn4.place(x=370,y=590,width=170,height=50)
+
+    #book5
+    img6 = Image.open("cart3.jpeg")
+    bk5= ImageTk.PhotoImage(img6)
+    lbl_img5 = Label(image=bk5,bg="snow3",bd=3)
+    lbl_img5.image = bk5
+    lbl_img5.place(x=370,y=420)
+    btn5=Button(root,text="My Library",bg="goldenrod3",fg="black",font=("Bahnschrift",15) ,bd=5,command=Library)
+    btn5.place(x=700,y=590,width=170,height=50)
+
+    #book6
+    img7 = Image.open("logout.jpeg")
+    bk6= ImageTk.PhotoImage(img7)
+    lbl_img6 = Label(image=bk6,bg="snow3",bd=3)
+    lbl_img6.image = bk6
+    lbl_img6.place(x=1050,y=420)
+    btn6=Button(root,text="Log Out",bg="goldenrod3",fg="black",font=("Bahnschrift",15) ,bd=5,command=log_out)
+    btn6.place(x=1050,y=590,width=160,height=50)
+
+    db.close()
+
+
+'''e1 = Entry(root,textvariable = name ,bg="white",fg="black", font=("Helvetica",16) ,bd=5)
+e1.place(x=350,y=200,width=230,height=30)'''
+
+#opening screen
+frm0=Frame(root,bg="lavender",bd=7)
+frm0.place(x=0,y=0,width=1450,height=750)
+
+image2 = Image.open("back_7.jpg")
+image2 = ImageTk.PhotoImage(image2)
+lbl_img2 = Label(image=image2)
+lbl_img2.image = image2
+lbl_img2.place(x=0,y=0)
+
+btn7=Button(root,text=" Welcome to 4Fox ",bg="black",fg="white",font=("Bahnschrift SemiBold",20),bd=5)
+btn7.place(x=600,y=30,width=300,height=50)
+
+
+#For user ID
+
+btn2=Button(root,text="Enter User ID:", fg="black", font=("Rockwell",16) ,bg="#bb8fce")
+btn2.place(x=520,y=400,width=150,height=30)
+txtfld1 = Entry(root,bg="white",fg="black", font=("Bahnschrift",16) ,bd=5)
+txtfld1.place(x=730,y=400,width=230,height=30)
+
+#For password
+btn1=Button(root,text="Enter Password:", fg="black", font=("Rockwell",16) ,bg="#bb8fce")
+btn1.place(x=520,y=460,width=160,height=30)
+txtfld2 = Entry(root,bg="white",fg="black", font=("Bahnschrift",16) ,bd=5,show="*")
+txtfld2.place(x=730,y=460,width=230,height=30)
+
+#Login button
+btn1=Button(root,text="LOGIN",bg="maroon", fg="white",font=("Bahnschrift SemiBold",20) ,bd=5,command=main_screen)
+btn1.place(x=700,y=520,width=150,height=50)
+
+logo = Image.open("logo.jpg")
+bk6= ImageTk.PhotoImage(logo)
+lbl_logo = Label(image=bk6,bg="snow3",bd=3)
+lbl_logo.image = bk6
+lbl_logo.place(x=700,y=250)
+
+
+root.mainloop()
